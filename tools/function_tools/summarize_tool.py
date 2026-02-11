@@ -1,28 +1,7 @@
-"""Lightweight extractive summarization tool.
+"""LangChain-compatible extractive summarization tool.
 
-Detailed documentation
-----------------------
-Purpose
-    Produce concise extractive summaries by scoring sentences with term
-    frequencies (stopword-filtered) and selecting the top-N sentences in their
-    original order.
-
-Interfaces
-    - ``Args`` schema: ``text`` (str), ``max_sentences`` (int>0).
-    - ``_run``: LangChain entry; returns summary string.
-    - ``execute``: Backwards-compatible imperative wrapper.
-
-Behavior
-    - Normalizes whitespace, splits on punctuation, excludes common stopwords,
-      scores sentences by summed word frequencies, and returns the highest
-      scoring sentences.
-
-Why this fits LangChain
-    - Implements ``args_schema`` and ``_run`` for immediate tool registration
-      in agents/LCEL.
-    - ``return_direct=True`` allows agent responses to stream the summary
-      directly.
-    - No heavy dependencies; deterministic for synchronous tool calls.
+Ranks sentences by token frequency and returns the highest-scoring sentences
+while preserving original order.
 """
 from __future__ import annotations
 
@@ -69,12 +48,14 @@ STOPWORDS = {
 
 
 def _split_sentences(text: str) -> List[str]:
+    """Split text into sentences using punctuation boundaries."""
     pattern = r"(?<=[.!?])\s+"
     sentences = re.split(pattern, text)
     return [s.strip() for s in sentences if s.strip()]
 
 
 def _tokenize(text: str) -> List[str]:
+    """Tokenize text into lowercase word tokens."""
     return re.findall(r"\b\w+\b", text.lower())
 
 
@@ -92,9 +73,11 @@ class SummarizeTool(BaseTool):
     args_schema: Any = Args
 
     def __init__(self, *, logger: Any = None) -> None:
+        """Initialize summarization tool with optional logger injection."""
         super().__init__(logger=logger or get_logger(self.__class__.__name__))
 
     def _run(self, text: str, max_sentences: int = 3, **_: Any) -> str:
+        """Return an extractive summary capped at ``max_sentences``."""
         if not text or not isinstance(text, str):
             raise ValueError("text must be a non-empty string")
         if max_sentences <= 0:
@@ -129,4 +112,5 @@ class SummarizeTool(BaseTool):
 
     # Backwards-compatible wrapper
     def execute(self, text: str, max_sentences: int = 3) -> str:  # pragma: no cover
+        """Imperative wrapper for non-LangChain call sites."""
         return self._run(text=text, max_sentences=max_sentences)

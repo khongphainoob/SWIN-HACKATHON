@@ -1,50 +1,144 @@
-# LangChain Tooling & Data Services Design
+# LangChain Design Reference
 
-This document explains the purpose, interfaces, and LangChain alignment for each Python module added/modified in this project.
+This document explains how each implemented module aligns with LangChain interfaces, how modules compose into a RAG workflow, and where to extend next.
 
-## tools/base_tool.py
-- **What it does:** Wraps `langchain_core.tools.BaseTool` to give every custom tool a shared logger and relaxed Pydantic v2 config (`extra="allow"`, `arbitrary_types_allowed=True`). Adds a default `logger` field.
-- **Why it fits LangChain:** Tools in LangChain must inherit from `BaseTool` (or implement the same model interface) to be serializable and runnable inside agents/executors. Using the LangChain base keeps compatibility with tool invocation (`.invoke`, `.batch`, pipelines) and Pydantic validation.
+## 1. Tooling Layer (`tools/`)
 
-## tools/search_tool.py (SearchNewsTool)
-- **What it does:** Fetches news for a ticker/keyword using `yfinance` when available, otherwise a lightweight Yahoo Finance HTTP endpoint. Normalizes timestamps to ISO 8601. Exposes `Args` schema for validation and can be invoked via LangChain (`tool.invoke`).
-- **LangChain alignment:** Implements `_run`, sets `args_schema`, `name`, `description`, and `return_direct` so the tool can be auto-routed by LangChain agents. Accepts dependency injection of `fetcher` to stay deterministic in tests and sandboxed runs.
+### `tools/base_tool.py`
+Purpose:
+- Shared base class for custom tools.
+- Inherits from `langchain_core.tools.BaseTool`.
 
-## tools/database_tool.py (DatabaseTool)
-- **What it does:** SQLite-backed portfolio store with actions: `get`, `select`, `upsert`, `delete`. Enforces schema creation, ISO timestamps, symbol uppercasing, and basic validation. Supports imperative helpers plus LangChain `_run` path.
-- **LangChain alignment:** Uses `args_schema` and `_run` to make database operations callable from chains/agents while keeping return values JSON-serializable. `return_direct=True` allows immediate response streaming when used in tool-using agents.
+LangChain contract:
+- Uses tool metadata (`name`, `description`) and `_run` for sync execution.
+- Supports `invoke` and schema validation through Pydantic models.
 
-## tools/function_tools/summarize_tool.py (SummarizeTool)
-- **What it does:** Lightweight extractive summarizer using frequency scoring, stopwords filtering, and sentence ranking. Returns top-N sentences.
-- **LangChain alignment:** Declares `args_schema`, `_run`, `return_direct` for plug-and-play in LangChain tool collections; pure-Python logic keeps the tool fast and dependency-light for synchronous agent calls.
+Why it matters:
+- Any subclass can be plugged directly into LangChain agent executors.
 
-## services/vector_store_service.py (TfidfVectorStore)
-- **What it does:** In-memory TF‑IDF `VectorStore` that returns LangChain `Document` objects and supports `from_texts`, `similarity_search`, and `similarity_search_with_score`.
-- **LangChain alignment:** Implements the abstract `VectorStore` contract (methods `from_texts`, `similarity_search`) so it can be dropped into retrievers, LCEL chains, or agents. Uses cosine similarity over TF‑IDF vectors—simple, dependency-free, and deterministic for tests.
+### `tools/search_tool.py` (`SearchNewsTool`)
+Purpose:
+- Fetch news by ticker/keyword from Yahoo Finance.
+- Prefer `yfinance`, fallback to Yahoo HTTP search endpoint.
 
-## data/embedding_pipeline.py
-- **What it does:** CLI pipeline that loads the Kaggle Financial Sentiment CSV, builds a `TfidfVectorStore`, and writes JSONL rows containing text, metadata, vector, and vocabulary into `data/embeddings/`.
-- **LangChain alignment:** Reuses the same vector store interface used at runtime, ensuring parity between offline preprocessing and online retrieval. Output vectors are deterministic and portable.
+Input schema:
+- `query: str`
+- `limit: int > 0`
 
-## utils/logger.py
-- **What it does:** Provides `get_logger` to create non-propagating, leveled loggers with consistent formatting.
-- **LangChain alignment:** Tools/services accept an optional logger; this helper ensures safe default logging without forcing users to configure logging globally.
+Output:
+- `List[Dict[str, Any]]` with keys: `title`, `link`, `publisher`, `published`, `type`
 
-## utils/retry.py
-- **What it does:** Decorator for exponential backoff retries.
-- **LangChain alignment:** Useful for wrapping network-bound tool/service calls used inside chains without coupling to external libraries.
+LangChain contract:
+- Declares `args_schema` and `_run`.
+- Called via `tool.invoke({...})`.
 
-## utils/helpers.py
-- **What it does:** Formatting helpers (currency, percent), safe nested getter, whitespace normalizer, date parsing, and cosine similarity.
-- **LangChain alignment:** Keeps small, serializable utility functions close to tools/services, avoiding heavyweight dependencies while supporting retrieval and response formatting in chains.
+Notes:
+- Timestamps are normalized when possible.
+- Output is already suitable for downstream RAG services.
 
-## tests/
-- **What they cover:** Unit tests for helpers, summarizer, search tool, database tool, and vector store. Tests exercise `tool.invoke` and LangChain-facing interfaces to guard compatibility with LCEL/agents.
+### `tools/database_tool.py` (`DatabaseTool`)
+Purpose:
+- Local SQLite portfolio CRUD operations.
 
-## Design Choices for LangChain Compatibility
-- **Pydantic v2 schemas:** Every tool defines an inner `Args` model and sets `args_schema` so LangChain can validate inputs and auto-generate tool descriptions for agents.
-- **`_run` over `execute`:** LangChain invokes `_run`/`_arun`; keeping a thin `execute` wrapper preserves old imperative use while making tools runnable in LCEL.
-- **`return_direct=True`:** Lets agent executors return tool output immediately when appropriate (search, summarize, DB ops), mirroring common LangChain tool patterns.
-- **Serializable returns:** Tools return plain dict/list/str types to remain JSON-serializable for agent messaging and tracing.
-- **Dependency-light:** TF‑IDF vector store and summarizer avoid heavy ML deps, speeding local runs and tests while remaining pluggable with LangChain retrievers if you later swap to an embedding model-backed store.
+Supported actions:
+- `get`, `upsert`, `delete`, `select`
 
+LangChain contract:
+- Action-routed through `_run`.
+- Returns serializable dictionaries/lists for agent messaging.
+
+### `tools/function_tools/summarize_tool.py` (`SummarizeTool`)
+Purpose:
+- Lightweight extractive summarization.
+
+LangChain contract:
+- Uses `args_schema` + `_run`.
+- Works as a deterministic utility tool in chains.
+
+## 2. Retrieval and Sentiment Services (`services/`)
+
+### `services/vector_store_service.py` (`TfidfVectorStore`)
+Purpose:
+- Minimal in-memory vector store implementing LangChain `VectorStore`.
+
+Key methods:
+- `from_texts(...)`
+- `add_texts(...)`
+- `similarity_search(...)`
+- `similarity_search_with_score(...)`
+
+Retrieval details:
+- TF-IDF vectors built in pure Python.
+- Similarity uses cosine similarity.
+
+Why it matters:
+- Supports local RAG and testability without external vector databases.
+
+### `services/news_sentiment_service.py` (`NewsSentimentRAGService`)
+Purpose:
+- Predict sentiment from search output using retrieval over labeled sentiment data.
+
+RAG steps:
+1. Build retrieval index from `data/data.csv` (`Sentence`, `Sentiment`).
+2. For each article title/summary, retrieve top-k similar labeled samples.
+3. Compute weighted label vote from retrieved neighbors.
+4. Return per-article sentiment and aggregate portfolio-level sentiment signal.
+
+Public API:
+- `predict_text(text, evidence_k=3)`
+- `predict_article(article, evidence_k=3)`
+- `predict_from_search_results(articles, evidence_k=3)`
+
+Output shape:
+- Per-article: `sentiment`, `confidence`, `sentiment_score`, `retrieved_examples`
+- Aggregate: `overall_sentiment`, `overall_score`, `counts`, `articles`, `skipped`
+
+## 3. Data Pipeline (`data/`)
+
+### `data/embedding_pipeline.py`
+Purpose:
+- Build embeddings JSONL from Kaggle sentiment CSV using the same TF-IDF implementation as runtime retrieval.
+
+Why this matters for LangChain:
+- Offline preprocessing and online retrieval use the same vector logic.
+- Reduces train/serve mismatch for local experiments.
+
+## 4. End-to-End Flow
+
+```text
+Ticker query -> SearchNewsTool -> article list
+           -> NewsSentimentRAGService -> per-article sentiment + aggregate sentiment
+```
+
+Optional additions:
+- Attach `DatabaseTool` to include user holdings context.
+- Add `SummarizeTool` before/after sentiment scoring for user-facing reports.
+- Wrap flow in a LangGraph orchestrator node graph.
+
+## 5. Interface Conventions
+
+- Tool calls use `.invoke({...})`.
+- Tool/service outputs should be JSON-serializable.
+- Keep `_run` synchronous unless async is required.
+- Prefer explicit schemas (`args_schema`) for agent reliability.
+
+## 6. Testing Strategy
+
+Current tests cover:
+- Tools (`search`, `database`, `summarize`)
+- Retrieval (`TfidfVectorStore`)
+- RAG sentiment (`NewsSentimentRAGService`)
+- Utility helpers
+
+Recommended additions:
+- Golden tests for sentiment drift on fixed fixture inputs.
+- Contract tests for tool payload shape.
+- Integration tests for future LangGraph orchestrator.
+
+## 7. Known Gaps and Planned Extensions
+
+- Agent and orchestrator modules are currently scaffold-only.
+- No production retriever backend yet (Chroma/Pinecone/FAISS).
+- No LLM reasoning layer yet for explanation synthesis.
+
+This codebase is intentionally local-first and deterministic, then extendable to full agentic LangChain/LangGraph deployment.

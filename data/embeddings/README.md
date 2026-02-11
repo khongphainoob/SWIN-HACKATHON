@@ -1,15 +1,26 @@
-This folder stores precomputed embeddings derived from the Kaggle Financial Sentiment dataset.
+# Embeddings Artifacts
 
-Generate with:
+This directory stores generated embedding files used by retrieval workflows.
 
-```
-python data/embedding_pipeline.py --csv /path/to/financial_sentiment.csv --text-col Sentence --label-col Sentiment
-```
+## Default Output
+`financial_sentiment_embeddings.jsonl`
 
-The pipeline writes a JSONL file where each line contains:
-- `id`: row identifier
+Each line contains:
+- `id`: row id
 - `text`: original sentence
-- `metadata`: includes the sentiment label
-- `vector`: TF‑IDF vector for the sentence
-- `vocabulary`: vocabulary snapshot used for that vector
+- `metadata`: label metadata (for example `{"label": "positive"}`)
+- `vector`: TF-IDF vector
+- `vocabulary`: vocabulary snapshot used to build that vector
 
+## Generate
+```bash
+python3 data/embedding_pipeline.py \
+  --csv data/data.csv \
+  --text-col Sentence \
+  --label-col Sentiment \
+  --output data/embeddings/financial_sentiment_embeddings.jsonl
+```
+
+## Notes
+- Regenerate when the source dataset changes.
+- Keep pipeline/runtime vectorization logic aligned.

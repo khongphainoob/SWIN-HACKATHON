@@ -1,28 +1,7 @@
-"""TF-IDF VectorStore implementation compatible with LangChain.
+"""Local TF-IDF vector store for retrieval workflows.
 
-Detailed documentation
-----------------------
-Purpose
-    Provide an in-memory, dependency-light vector store that satisfies the
-    ``langchain_core.vectorstores.VectorStore`` contract using TF-IDF vectors
-    and cosine similarity.
-
-Interfaces
-    - ``from_texts``: Standard constructor used by retrievers/chains.
-    - ``add_texts``: Add documents with optional ids and metadata.
-    - ``similarity_search`` / ``similarity_search_with_score``: Retrieve top-k
-      ``Document`` objects (optionally with scores).
-
-Behavior
-    - Tokenizes text, builds vocabulary, computes IDF, and stores TF-IDF
-      vectors alongside ``Document`` objects.
-    - Pure Python, deterministic, no external ML dependencies.
-
-Why this fits LangChain
-    - Implements required abstract methods, so it can be wrapped by
-      ``VectorStoreRetriever`` or used directly inside LCEL chains.
-    - Returns LangChain ``Document`` objects for compatibility with downstream
-      chains/agents that expect standardized document payloads.
+Implements the LangChain ``VectorStore`` interface in pure Python and is used
+by both offline embedding generation and runtime RAG lookups.
 """
 from __future__ import annotations
 
@@ -39,6 +18,7 @@ from utils.logger import get_logger
 
 
 def _tokenize(text: str) -> List[str]:
+    """Tokenize text into lowercase alphanumeric word tokens."""
     return re.findall(r"\b\w+\b", text.lower())
 
 
@@ -46,6 +26,7 @@ class TfidfVectorStore(VectorStore):
     """In-memory TF‑IDF vector store with cosine similarity search."""
 
     def __init__(self, *, logger: Optional[Any] = None) -> None:
+        """Create an empty TF-IDF store with in-memory indexes."""
         self.logger = logger or get_logger(self.__class__.__name__)
         self.documents: List[Document] = []
         self.tokens: List[List[str]] = []
@@ -63,6 +44,7 @@ class TfidfVectorStore(VectorStore):
         ids: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> "TfidfVectorStore":
+        """Instantiate a store and index the provided texts."""
         store = cls(**kwargs)
         store.add_texts(texts, metadatas=metadatas, ids=ids)
         return store
@@ -70,12 +52,14 @@ class TfidfVectorStore(VectorStore):
     def similarity_search(
         self, query: str, k: int = 4, **kwargs: Any
     ) -> List[Document]:
+        """Return the top-k most similar documents for a query string."""
         results = self._similarity(query, k)
         return [doc for doc, _score in results]
 
     def similarity_search_with_score(
         self, query: str, k: int = 4, **kwargs: Any
     ) -> List[tuple[Document, float]]:
+        """Return the top-k most similar documents with similarity scores."""
         return self._similarity(query, k)
 
     # ---- Public API -------------------------------------------------------------------
@@ -85,6 +69,7 @@ class TfidfVectorStore(VectorStore):
         metadatas: Optional[Sequence[Dict[str, Any]]] = None,
         ids: Optional[Sequence[str]] = None,
     ) -> List[str]:
+        """Append texts to the store and rebuild TF-IDF indexes."""
         if ids and len(ids) != len(texts):
             raise ValueError("ids length must match texts length")
         if metadatas and len(metadatas) != len(texts):
@@ -105,6 +90,7 @@ class TfidfVectorStore(VectorStore):
 
     # ---- Internal helpers -------------------------------------------------------------
     def _rebuild_index(self) -> None:
+        """Recompute vocabulary, IDF values, and document vectors."""
         vocab_set = set()
         for tokens in self.tokens:
             vocab_set.update(tokens)
@@ -124,6 +110,7 @@ class TfidfVectorStore(VectorStore):
         self.vectors = [self._vectorize(tokens) for tokens in self.tokens]
 
     def _vectorize(self, tokens: List[str]) -> List[float]:
+        """Convert token list into a TF-IDF vector using current vocabulary."""
         counts = Counter(tokens)
         token_count = len(tokens) or 1
         return [
@@ -132,6 +119,7 @@ class TfidfVectorStore(VectorStore):
         ]
 
     def _similarity(self, query: str, k: int) -> List[tuple[Document, float]]:
+        """Compute and rank cosine similarity scores for the query."""
         if not self.documents:
             return []
 

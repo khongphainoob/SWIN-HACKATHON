@@ -1,19 +1,19 @@
-# orchestrators
+# Orchestrators Module
 
-Bộ điều phối luồng tác vụ, ví dụ LangGraph State Machine. Quản lý quá trình phối hợp giữa các agent và công cụ.
+## Purpose
+`orchestrators/` contains orchestration abstractions for coordinating tools, services, and agents.
 
-## Sử dụng class base để kế thừa và phát triển
+Current state:
+- `base_orchestrator.py` defines the abstract `orchestrate` contract.
+- No concrete LangGraph orchestrator is implemented yet.
 
-Nên định nghĩa một class nền (ví dụ: `BaseOrchestrator`) để các orchestrator chuyên biệt kế thừa và mở rộng.
+## LangGraph Direction
+Recommended next implementation:
+- Build `langgraph_orchestrator.py` with explicit state schema.
+- Nodes: `search_news`, `score_sentiment`, `summarize`, `respond`.
+- Add branching for low-confidence or missing-data fallback.
 
-### Ví dụ kế thừa
-```python
-from base_orchestrator import BaseOrchestrator
-
-class LangGraphOrchestrator(BaseOrchestrator):
-	def orchestrate(self, agents):
-		# Logic điều phối
-		pass
-```
-
-Tạo file `base_orchestrator.py` để định nghĩa class nền cho các orchestrator.
+## Design Rules
+- Keep orchestration deterministic where possible.
+- Keep node IO structured and typed.
+- Avoid direct external API calls in orchestrator; call tools/services instead.

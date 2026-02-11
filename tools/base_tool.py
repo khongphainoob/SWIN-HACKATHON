@@ -1,28 +1,7 @@
-"""LangChain-aligned base class for custom tools.
+"""Shared base class for custom LangChain tools.
 
-Detailed documentation
-----------------------
-Purpose
-    Provide a single base that inherits from ``langchain_core.tools.BaseTool`` so
-    all custom tools remain serializable and runnable inside LangChain agents
-    and LCEL pipelines. Also injects a per-class logger and relaxed Pydantic
-    config to accept extra runtime fields.
-
-Key attributes
-    - ``name`` / ``description``: Used by LangChain for tool selection & docs.
-    - ``logger``: Optional logger; defaults to ``utils.logger.get_logger``.
-    - ``model_config``: ``extra='allow'`` so subclasses can set custom fields
-      without redefining Pydantic model config.
-
-Why this fits LangChain
-    - Extends the official ``BaseTool`` so ``invoke``, ``batch``, and agent
-      tool calling work out of the box.
-    - Keeps async hook ``_arun`` guarded to signal sync-only tools by default.
-
-Usage
-    Subclass ``BaseTool`` and implement ``_run`` (and optionally ``_arun``).
-    Optionally add an ``Args`` Pydantic model and set ``args_schema`` for
-    automatic validation and OpenAI-format tool descriptions.
+Extends ``langchain_core.tools.BaseTool`` with default logger injection and
+Pydantic settings used across this project.
 """
 from __future__ import annotations
 
@@ -43,9 +22,11 @@ class BaseTool(LCBaseTool):
     model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
     def __init__(self, **data: Any):  # type: ignore[override]
+        """Initialize tool and inject default logger when missing."""
         if data.get("logger") is None:
             data["logger"] = get_logger(self.__class__.__name__)
         super().__init__(**data)
 
     async def _arun(self, *args, **kwargs):  # pragma: no cover - sync by default
+        """Async hook placeholder; sync execution is the default in this project."""
         raise NotImplementedError("Async execution is not implemented for this tool.")

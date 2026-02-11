@@ -1,19 +1,16 @@
-# configs
+# Configs Module
 
-Chứa các file cấu hình cho Model, Tool, Protocol. Đảm bảo hệ thống hoạt động đúng và bảo mật.
+## Purpose
+`configs/` stores configuration abstractions and future runtime settings.
 
-## Sử dụng class base để kế thừa và phát triển
+Current state:
+- `base_config.py` defines the abstract `load` contract.
 
-Nên định nghĩa một class nền (ví dụ: `BaseConfig`) để các loại cấu hình chuyên biệt kế thừa và mở rộng.
+## Recommended Config Scope
+- Model settings (provider, model name, temperature, max tokens)
+- Retrieval settings (`k`, thresholds, score cutoffs)
+- Tool runtime settings (timeouts, retry policy)
+- Environment-specific switches (dev/staging/prod)
 
-### Ví dụ kế thừa
-```python
-from base_config import BaseConfig
-
-class ModelConfig(BaseConfig):
-	def load(self):
-		# Logic tải cấu hình
-		pass
-```
-
-Tạo file `base_config.py` để định nghĩa class nền cho các loại cấu hình.
+## LangChain Fit
+Keep configs explicit and injectable so chains, tools, and orchestrators remain testable and environment-agnostic.

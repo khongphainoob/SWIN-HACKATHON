@@ -1,19 +1,24 @@
-# agents
+# Agents Module
 
-Chứa các định nghĩa về chuyên gia AI như Planning Agent, Sentiment Agent, Reasoning Agent. Mỗi agent đảm nhận một vai trò chuyên biệt trong hệ thống.
+## Purpose
+`agents/` contains agent interfaces and future agent implementations for LangChain/LangGraph execution.
 
-## Sử dụng class base để kế thừa và phát triển
+Current state:
+- `base_agent.py` defines the abstract contract (`act`).
+- Concrete planning/reasoning/sentiment agents are not implemented yet.
 
-Nên định nghĩa một class trừu tượng (ví dụ: `BaseAgent`) để các agent chuyên biệt kế thừa và mở rộng.
+## LangChain Fit
+When implemented, agent classes should:
+- Accept LangChain tools as dependencies.
+- Use structured state inputs/outputs.
+- Delegate tool execution via `invoke`.
 
-### Ví dụ kế thừa
-```python
-from base_agent import BaseAgent
+## Recommended Agent Roles
+- Planning Agent: decomposes user goals into tool/retrieval steps.
+- Sentiment Agent: coordinates news retrieval and RAG sentiment scoring.
+- Monitoring Agent: validates confidence, missing data, and fallback behavior.
 
-class PlanningAgent(BaseAgent):
-	def plan(self, portfolio):
-		# Logic lập kế hoạch đầu tư
-		pass
-```
-
-Tạo file `base_agent.py` để định nghĩa class nền cho các agent.
+## Implementation Guidelines
+- Keep agent outputs JSON-serializable.
+- Keep side effects in tools/services, not in orchestration logic.
+- Add unit tests per agent for deterministic state transitions.

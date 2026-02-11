@@ -1,4 +1,8 @@
-"""News search tool using Yahoo Finance or a pluggable fetcher."""
+"""Market news search tool with Yahoo Finance backends.
+
+Fetches articles for a ticker/keyword and returns normalized payloads suitable
+for downstream summarization and sentiment analysis.
+"""
 from __future__ import annotations
 
 import datetime as _dt
@@ -121,6 +125,8 @@ def _http_fallback_fetcher(query: str, limit: int = 5) -> List[Dict[str, Any]]:
 
 
 class SearchNewsTool(BaseTool):
+    """LangChain tool that fetches normalized market news results."""
+
     name: str = "search_news"
     description: str = "Fetch market news for a ticker or keyword using Yahoo Finance."
     return_direct: bool = True
@@ -138,6 +144,7 @@ class SearchNewsTool(BaseTool):
         fetcher: Optional[Callable[[str, int], List[Dict[str, Any]]]] = None,
         logger: Optional[Any] = None,
     ) -> None:
+        """Initialize the tool with an injected fetcher or default backend."""
         resolved_fetcher = fetcher or self._resolve_default_fetcher()
         super().__init__(
             fetcher=resolved_fetcher,
@@ -145,6 +152,7 @@ class SearchNewsTool(BaseTool):
         )
 
     def _resolve_default_fetcher(self) -> Callable[[str, int], List[Dict[str, Any]]]:
+        """Choose yfinance fetcher when available, otherwise HTTP fallback."""
         try:  # pragma: no cover
             import yfinance  # noqa: F401
 
@@ -153,6 +161,7 @@ class SearchNewsTool(BaseTool):
             return _http_fallback_fetcher
 
     def _run(self, query: str, limit: int = 5, **_: Any) -> List[Dict[str, Any]]:
+        """Validate inputs and fetch news articles for the given query."""
         if not isinstance(query, str) or not query.strip():
             raise ValueError("query must be a non-empty string")
         if limit <= 0:

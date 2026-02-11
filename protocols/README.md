@@ -1,19 +1,20 @@
-# protocols
+# Protocols Module
 
-Quy tắc giao tiếp chuẩn hóa giữa các Agent, ví dụ MCP (Model Context Protocol), A2A (Agent-to-Agent). Đảm bảo bảo mật và mở rộng.
+## Purpose
+`protocols/` defines message contracts for module-to-module and agent-to-agent communication.
 
-## Sử dụng class base để kế thừa và phát triển
+Current state:
+- `base_protocol.py` provides a minimal abstract interface.
 
-Nên định nghĩa một class nền (ví dụ: `BaseProtocol`) để các protocol chuyên biệt kế thừa và mở rộng.
+## LangChain and LangGraph Relevance
+Protocols are useful for:
+- Standardizing tool output envelopes
+- Preserving traceability across graph nodes
+- Enforcing schema validation at handoff boundaries
 
-### Ví dụ kế thừa
-```python
-from base_protocol import BaseProtocol
-
-class MCPProtocol(BaseProtocol):
-	def communicate(self, message):
-		# Logic giao tiếp
-		pass
-```
-
-Tạo file `base_protocol.py` để định nghĩa class nền cho các protocol.
+## Recommended Next Steps
+- Add typed protocol objects (Pydantic models) for:
+  - Tool result payloads
+  - Agent decision payloads
+  - Error/fallback payloads
+- Add compatibility helpers for `langchain_core.messages` when moving to chat-model agent loops.

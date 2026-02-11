@@ -1,21 +1,6 @@
-"""Retry decorator with exponential backoff.
+"""Retry helpers with exponential backoff.
 
-Detailed documentation
-----------------------
-Purpose
-    Wrap fragile functions (network/file I/O) with bounded retries and
-    exponential backoff to improve robustness of tools/services.
-
-Parameters
-    - ``exceptions``: Tuple of exception types to catch (default ``Exception``).
-    - ``tries``: Total attempts including first call.
-    - ``delay``: Initial backoff delay in seconds.
-    - ``backoff``: Multiplier applied after each failure.
-    - ``max_delay``: Upper bound for backoff.
-
-Why this fits LangChain
-    - Tools inside agents may hit transient API errors; this decorator gives a
-      lightweight resilience layer without adding new dependencies.
+Provides a lightweight decorator for retrying transiently failing operations.
 """
 from __future__ import annotations
 
@@ -42,8 +27,10 @@ def retry(
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        """Decorate ``func`` with retry-on-exception behavior."""
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """Execute function with bounded retry and backoff."""
             _tries, _delay = tries, delay
             while _tries > 1:
                 try:

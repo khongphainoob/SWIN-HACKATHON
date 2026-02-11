@@ -1,29 +1,7 @@
-"""Embedding pipeline for the Kaggle Financial Sentiment dataset.
+"""CLI pipeline for generating sentiment embedding artifacts.
 
-Detailed documentation
-----------------------
-Purpose
-    Convert the Kaggle Financial Sentiment CSV into a TF-IDF vector store using
-    the same ``TfidfVectorStore`` used at runtime, then persist vectors +
-    vocabulary as JSONL for fast loading.
-
-Usage
-    python3 data/embedding_pipeline.py --csv path/to/dataset.csv \\
-        --text-col Sentence --label-col Sentiment
-
-Inputs
-    - CSV with text column (default ``Sentence``) and label column (default
-      ``Sentiment``).
-
-Outputs
-    - JSONL file in ``data/embeddings/`` containing: ``id``, ``text``,
-      ``metadata`` (label), ``vector`` (TF-IDF array), ``vocabulary`` snapshot.
-
-Why this fits LangChain
-    - Uses the same ``TfidfVectorStore`` interface as runtime retrieval, so
-      offline preprocessing and online querying stay aligned.
-    - Produces deterministic vectors without extra dependencies, keeping local
-      agent demos lightweight.
+Reads labeled sentiment CSV rows, indexes text with ``TfidfVectorStore``, and
+writes JSONL records used by local retrieval workflows.
 """
 from __future__ import annotations
 
@@ -43,6 +21,7 @@ def build_embeddings(
     label_col: str,
     output_path: Path,
 ) -> None:
+    """Build TF-IDF vectors from CSV and persist records to JSONL."""
     logger = get_logger("embedding_pipeline")
     texts: List[str] = []
     ids: List[str] = []
@@ -79,6 +58,7 @@ def build_embeddings(
 
 
 def main() -> None:
+    """Parse CLI args and run embedding build pipeline."""
     parser = argparse.ArgumentParser(description="Build sentiment embeddings.")
     parser.add_argument("--csv", type=Path, required=True, help="Path to Kaggle CSV file")
     parser.add_argument("--text-col", default="Sentence", help="Name of text column")

@@ -1,21 +1,7 @@
-"""Generic helper utilities.
+"""Shared helper utilities used across tools and services.
 
-Detailed documentation
-----------------------
-Purpose
-    Centralize lightweight helper functions for formatting, safe access,
-    vector math, whitespace normalization, and date parsing.
-
-Functions
-    - ``format_currency`` / ``format_percent``: Presentation helpers.
-    - ``safe_get``: Dot-path lookup in nested dicts.
-    - ``normalize_whitespace``: Collapses repeated whitespace.
-    - ``parse_date``: Attempts multiple date formats.
-    - ``cosine_similarity``: Vector similarity for TF-IDF store.
-
-Why this fits LangChain
-    - Provides small, dependency-free utilities used by tools and vector
-      store; keeps outputs serializable and predictable for agent flows.
+Includes formatting helpers, safe dictionary access, whitespace normalization,
+date parsing, and cosine similarity math.
 """
 from __future__ import annotations
 
@@ -26,11 +12,13 @@ from typing import Any, Dict, Iterable, List, Optional
 
 
 def format_currency(value: float, currency: str = "USD", decimals: int = 2) -> str:
+    """Format a numeric value as a human-readable currency string."""
     formatted = f"{value:,.{decimals}f}"
     return f"{currency} {formatted}"
 
 
 def format_percent(value: float, decimals: int = 2) -> str:
+    """Format a numeric value as a percent string."""
     return f"{value:.{decimals}f}%"
 
 
@@ -62,6 +50,7 @@ def parse_date(date_str: str, formats: Optional[Iterable[str]] = None) -> Option
 
 
 def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
+    """Compute cosine similarity for two same-length numeric vectors."""
     if len(vec_a) != len(vec_b):
         raise ValueError("Vectors must be the same length")
     dot = sum(a * b for a, b in zip(vec_a, vec_b))

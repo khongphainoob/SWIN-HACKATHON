@@ -1,29 +1,7 @@
-"""Portfolio database tool backed by SQLite.
+"""SQLite portfolio management tool.
 
-Detailed documentation
-----------------------
-Purpose
-    Manage user portfolio holdings (CRUD) in a local SQLite database for fast,
-    dependency-light storage during agent runs.
-
-Interfaces
-    - ``Args`` schema: ``action`` (get/select/upsert/delete), ``user_id``,
-      optional ``symbol``, ``shares``, ``avg_cost``, custom ``query``/``params``.
-    - ``_run``: Routes to the appropriate CRUD helper.
-    - Helper methods: ``_select``, ``_get_portfolio``, ``_upsert_holding``,
-      ``_delete_holding``; imperative wrappers provided for legacy use.
-
-Behavior
-    - Auto-creates the ``holdings`` table on init.
-    - Upserts normalize symbols to uppercase and timestamp updates in ISO 8601.
-    - Validates positive numeric inputs for shares/cost.
-
-Why this fits LangChain
-    - Implements ``args_schema`` and ``_run`` so agents can call it as a tool.
-    - ``return_direct=True`` enables immediate tool responses in agent
-      executors without extra formatting layers.
-    - Pure-Python/SQLite keeps the tool synchronous and deterministic for LCEL
-      pipelines and unit tests.
+Implements CRUD-style operations behind a LangChain tool interface for user
+holdings data.
 """
 from __future__ import annotations
 
@@ -57,11 +35,13 @@ class DatabaseTool(BaseTool):
     args_schema: Any = Args
 
     def __init__(self, db_path: str = "data/portfolio.db", *, logger: Optional[Any] = None) -> None:
+        """Initialize the SQLite tool and ensure schema exists."""
         super().__init__(db_path=db_path, logger=logger or get_logger(self.__class__.__name__))
         self._ensure_schema()
 
     @contextmanager
     def _connect(self):
+        """Yield a SQLite connection with row dictionaries enabled."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         try:
@@ -70,6 +50,7 @@ class DatabaseTool(BaseTool):
             conn.close()
 
     def _ensure_schema(self) -> None:
+        """Create required database tables when missing."""
         with self._connect() as conn:
             conn.execute(
                 """
@@ -119,6 +100,7 @@ class DatabaseTool(BaseTool):
         return "upserted"
 
     def _delete_holding(self, user_id: str, symbol: str) -> str:
+        """Delete one holding row for the given user and symbol."""
         with self._connect() as conn:
             conn.execute("DELETE FROM holdings WHERE user_id = ? AND symbol = ?", (user_id, symbol.upper()))
             conn.commit()
@@ -135,6 +117,7 @@ class DatabaseTool(BaseTool):
         params: Optional[List[Any]] = None,
         **_: Any,
     ) -> Any:
+        """Route validated action input to the corresponding CRUD operation."""
         action = action.lower()
         if action == "get":
             return self._get_portfolio(user_id)
@@ -154,13 +137,17 @@ class DatabaseTool(BaseTool):
 
     # Backwards-compatible imperative usage
     def execute(self, query: str, params: Optional[Iterable[Any]] = None) -> List[Dict[str, Any]]:  # pragma: no cover
+        """Imperative wrapper for raw SELECT queries."""
         return self._select(query, params)
 
     def get_portfolio(self, user_id: str) -> List[Dict[str, Any]]:  # pragma: no cover
+        """Imperative wrapper that returns all user holdings."""
         return self._get_portfolio(user_id)
 
     def upsert_holding(self, user_id: str, symbol: str, shares: float, avg_cost: float) -> str:  # pragma: no cover
+        """Imperative wrapper that inserts or updates one holding."""
         return self._upsert_holding(user_id, symbol, shares, avg_cost)
 
     def delete_holding(self, user_id: str, symbol: str) -> str:  # pragma: no cover
+        """Imperative wrapper that deletes one holding."""
         return self._delete_holding(user_id, symbol)

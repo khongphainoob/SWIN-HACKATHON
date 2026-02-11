@@ -1,10 +1,15 @@
+"""Unit tests for extractive summarization tool behavior."""
+
 import unittest
 
 from tools.function_tools.summarize_tool import SummarizeTool
 
 
 class SummarizeToolTestCase(unittest.TestCase):
+    """Checks summary length and passthrough behavior for short text."""
+
     def test_summary_limits_sentences(self):
+        """Summary output should not exceed requested sentence limit."""
         text = (
             "Stocks rallied today after inflation cooled. "
             "Investors cheered the news. "
@@ -17,6 +22,7 @@ class SummarizeToolTestCase(unittest.TestCase):
         self.assertIn("Stocks rallied today", summary)
 
     def test_short_text_returns_original(self):
+        """Short inputs should be returned unchanged."""
         text = "Markets were flat."
         tool = SummarizeTool()
         summary = tool.invoke({"text": text, "max_sentences": 3})

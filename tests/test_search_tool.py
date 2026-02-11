@@ -1,10 +1,15 @@
+"""Unit tests for market news search tool behavior and validation."""
+
 import unittest
 
 from tools.search_tool import SearchNewsTool
 
 
 class SearchNewsToolTestCase(unittest.TestCase):
+    """Covers happy-path and validation behavior for ``SearchNewsTool``."""
+
     def test_execute_with_stub_fetcher(self):
+        """Tool should return normalized results from an injected fetcher."""
         def stub_fetcher(query, limit):
             return [
                 {"title": f"{query} news 1", "link": "http://example.com/1", "publisher": "Stub", "published": 1700000000},
@@ -18,6 +23,7 @@ class SearchNewsToolTestCase(unittest.TestCase):
         self.assertTrue(results[0]["published"].endswith("Z"))
 
     def test_invalid_query(self):
+        """Tool should reject empty query strings."""
         tool = SearchNewsTool(fetcher=lambda q, l: [])
         with self.assertRaises(ValueError):
             tool.invoke({"query": "", "limit": 1})

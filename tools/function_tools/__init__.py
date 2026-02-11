@@ -1,7 +1,3 @@
-"""Function-level utility tools.
-
-Exports
-    - ``SummarizeTool``: Extractive summarizer (LangChain tool compatible).
-"""
+"""Exports function-level LangChain tools used by scripts and agents."""
 
 from tools.function_tools.summarize_tool import SummarizeTool  # noqa: F401
