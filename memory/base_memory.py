@@ -75,12 +75,8 @@ class RAGMemory(BaseMemory):
         self.embeddings.append(data)
 
     def retrieve(self, query: Any) -> Any:
-        """Placeholder retrieval method for future vector search."""
-        # Placeholder: implement vector search logic here
         return None
 
     def clear(self) -> None:
         """Clear stored embeddings."""
         self.embeddings.clear()
-
-# You can extend these classes or add new memory types as needed.

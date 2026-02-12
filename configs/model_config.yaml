@@ -1,0 +1,27 @@
+# model_config.yaml
+# Cấu hình cho LLM, Sentiment, Filtering, Recommendation, Memory
+
+LLM:
+  provider: "gemini"  # hoặc "openai"
+  model: "gemini-1.5-pro"
+  temperature: 0.3
+  max_tokens: 1024
+
+SENTIMENT:
+  model_checkpoint: "finbert-tone"
+  sentiment_threshold: -0.5
+
+FILTERING:
+  noise_filter_threshold: 0.85
+  verified_source_boost: 1.2
+  rumor_penalty: 0.5
+
+RECOMMENDATION:
+  high_urgency_threshold: 0.7
+  medium_urgency_threshold: 0.3
+  alert_cooldown_mins: 30
+
+MEMORY:
+  vector_embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  conversation_max_messages: 100
+  portfolio_cache_ttl_secs: 300
