@@ -1,19 +1,28 @@
-# data
+# Data Module
 
-Kho lưu trữ dữ liệu như Kaggle dataset, Embeddings. Dùng cho huấn luyện và truy vấn.
+## Purpose
+`data/` contains datasets and derived artifacts used for retrieval and sentiment inference.
 
-## Sử dụng class base để kế thừa và phát triển
+Key files:
+- `data.csv`: labeled financial sentiment dataset (`Sentence`, `Sentiment`)
+- `embedding_pipeline.py`: builds embedding JSONL artifacts
+- `embeddings/`: output directory for generated vectors
 
-Nên định nghĩa một class nền (ví dụ: `BaseDataStore`) để các loại kho dữ liệu chuyên biệt kế thừa và mở rộng.
+## LangChain Fit
+Data in this folder powers local retrieval for:
+- `TfidfVectorStore`
+- `NewsSentimentRAGService`
 
-### Ví dụ kế thừa
-```python
-from base_datastore import BaseDataStore
-
-class KaggleDataStore(BaseDataStore):
-	def load(self):
-		# Logic tải dữ liệu
-		pass
+## Build Embeddings Artifact
+```bash
+python3 data/embedding_pipeline.py \
+  --csv data/data.csv \
+  --text-col Sentence \
+  --label-col Sentiment \
+  --output data/embeddings/financial_sentiment_embeddings.jsonl
 ```
 
-Tạo file `base_datastore.py` để định nghĩa class nền cho các kho dữ liệu.
+## Data Quality Guidance
+- Keep labels normalized to `positive|neutral|negative`.
+- Remove empty or malformed rows before indexing.
+- Version large generated artifacts outside git when needed.

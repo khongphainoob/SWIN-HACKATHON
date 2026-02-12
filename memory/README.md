@@ -1,30 +1,22 @@
-# memory
+# Memory Module
 
-Quản lý ngữ cảnh, bao gồm Short-term Memory, Long-term Memory, và RAG (Retrieval-Augmented Generation).
+## Purpose
+`memory/` defines memory abstractions for agent workflows.
 
-## Sử dụng các class base để kế thừa và phát triển
+Current implementations in `base_memory.py`:
+- `BaseMemory`
+- `ShortTermMemory`
+- `LongTermMemory`
+- `RAGMemory` (placeholder retrieval logic)
 
-Các class base được định nghĩa trong file `base_memory.py`:
-- `BaseMemory`: class trừu tượng, định nghĩa các phương thức cơ bản (`store`, `retrieve`, `clear`).
-- `ShortTermMemory`, `LongTermMemory`, `RAGMemory`: các class mẫu kế thừa từ `BaseMemory`.
+## LangChain Fit
+This module is a scaffold for integrating:
+- Short-term conversation state
+- Long-term user/profile memory
+- Retrieval memory over embeddings/vector stores
 
-### Ví dụ kế thừa
-```python
-from base_memory import BaseMemory
-
-class CustomMemory(BaseMemory):
-	def __init__(self):
-		self.data = []
-
-	def store(self, data):
-		self.data.append(data)
-
-	def retrieve(self, query=None):
-		# Tùy chỉnh logic truy xuất
-		return self.data
-
-	def clear(self):
-		self.data.clear()
-```
-
-Bạn có thể mở rộng các class này để tích hợp logic phù hợp với hệ thống Agentic AI.
+## Integration Notes
+For production LangChain/LangGraph use:
+- Replace placeholder `RAGMemory.retrieve` with retriever-backed search.
+- Keep memory read/write side effects isolated from tool logic.
+- Define clear serialization format for checkpointing.

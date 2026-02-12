@@ -1,19 +1,34 @@
-# services
+# Services Module
 
-Kết nối hạ tầng như Gemini API, Vector Store. Đảm nhận việc tích hợp các dịch vụ bên ngoài vào hệ thống.
+## Purpose
+`services/` contains reusable, non-agent business logic and infrastructure adapters.
 
-## Sử dụng class base để kế thừa và phát triển
+Implemented services:
+- `vector_store_service.py` -> `TfidfVectorStore`
+- `news_sentiment_service.py` -> `NewsSentimentRAGService`
 
-Nên định nghĩa một class nền (ví dụ: `BaseService`) để các service chuyên biệt kế thừa và mở rộng.
+## Service Responsibilities
+- Data transformation
+- Retrieval/indexing
+- Domain scoring logic
+- Infrastructure abstraction for tools/agents
 
-### Ví dụ kế thừa
+Services should not:
+- Own conversational policy
+- Own multi-agent state transitions
+
+## LangChain Fit
+- `TfidfVectorStore` follows the `langchain_core.vectorstores.VectorStore` interface.
+- `NewsSentimentRAGService` consumes tool output and returns retrieval-grounded sentiment payloads suitable for chains/agents.
+
+## Example Composition
 ```python
-from base_service import BaseService
+from tools.search_tool import SearchNewsTool
+from services.news_sentiment_service import NewsSentimentRAGService
 
-class GeminiAPIService(BaseService):
-	def connect(self):
-		# Logic kết nối API
-		pass
+search = SearchNewsTool()
+rag_sentiment = NewsSentimentRAGService()
+
+articles = search.invoke({"query": "NVDA", "limit": 5})
+report = rag_sentiment.predict_from_search_results(articles)
 ```
-
-Tạo file `base_service.py` để định nghĩa class nền cho các service.

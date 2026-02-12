@@ -1,19 +1,22 @@
-# scripts
+# Scripts Module
 
-Script khởi chạy hệ thống và các demo. Hỗ trợ kiểm thử và trình diễn chức năng hệ thống.
+## Purpose
+`scripts/` contains runnable demos and entry points for local execution.
 
-## Sử dụng class base để kế thừa và phát triển
+Current script:
+- `test_news.py`: end-to-end demo for news retrieval plus RAG sentiment scoring.
 
-Nên định nghĩa một class nền (ví dụ: `BaseScript`) để các script chuyên biệt kế thừa và mở rộng.
-
-### Ví dụ kế thừa
-```python
-from base_script import BaseScript
-
-class DemoScript(BaseScript):
-	def run(self):
-		# Logic chạy demo
-		pass
+## How to Run
+From repository root:
+```bash
+python3 scripts/test_news.py
 ```
 
-Tạo file `base_script.py` để định nghĩa class nền cho các script.
+## Script Design Guidelines
+- Keep scripts thin.
+- Move reusable logic to `tools/` and `services/`.
+- Use scripts for demonstration, smoke testing, and quick manual checks.
+
+## Future Scripts
+- `run_agent.py`: orchestrator entry point.
+- `benchmark_sentiment.py`: latency/quality benchmarking.

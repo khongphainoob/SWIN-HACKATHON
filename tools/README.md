@@ -1,19 +1,39 @@
-# tools
+# Tools Module
 
-Các công cụ thực thi như Search News, DB Query, Yahoo Finance. Được sử dụng bởi các agent để lấy dữ liệu và thực hiện tác vụ.
+## Purpose
+`tools/` contains LangChain-compatible tools used by agents and scripts.
 
-## Sử dụng class base để kế thừa và phát triển
+Implemented tools:
+- `search_tool.py` -> `SearchNewsTool`
+- `database_tool.py` -> `DatabaseTool`
+- `function_tools/summarize_tool.py` -> `SummarizeTool`
 
-Nên định nghĩa một class nền (ví dụ: `BaseTool`) để các tool chuyên biệt kế thừa và mở rộng.
+## LangChain Standards
+Each tool should:
+- Inherit from `tools.base_tool.BaseTool`
+- Define `name`, `description`, `args_schema`
+- Implement `_run(...)`
+- Be executed with `.invoke({...})`
 
-### Ví dụ kế thừa
+## Output Contract
+Return only JSON-serializable values:
+- `dict`, `list`, `str`, `int`, `float`, `bool`, `None`
+
+This makes tool outputs safe for:
+- Agent tool routing
+- Logging/tracing
+- Protocol handoff
+
+## Example
 ```python
-from base_tool import BaseTool
+from tools.search_tool import SearchNewsTool
 
-class SearchNewsTool(BaseTool):
-	def execute(self, query):
-		# Logic tìm kiếm tin tức
-		pass
+tool = SearchNewsTool()
+articles = tool.invoke({"query": "MSFT", "limit": 3})
 ```
 
-Tạo file `base_tool.py` để định nghĩa class nền cho các tool.
+## Testing
+Add one test file per tool in `tests/`:
+- Validate schema and input errors.
+- Validate output shape.
+- Use dependency injection/mocks for network calls.
