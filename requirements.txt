@@ -1,1 +1,65 @@
+# ============================================================================
+# LangChain Financial News Sentiment System - Requirements
+# ============================================================================
+
+# -----------------------------------------------------------------------------
+# Core LangChain & LangGraph
+# -----------------------------------------------------------------------------
+langchain-core>=0.1.0,<0.3.0          # LangChain core abstractions
+langgraph>=0.0.20,<0.2.0              # LangGraph for agentic workflows
+
+# -----------------------------------------------------------------------------
+# Data Validation & Models
+# -----------------------------------------------------------------------------
+pydantic>=2.0.0,<3.0.0                # Data validation and settings management
+pydantic-settings>=2.0.0,<3.0.0       # Settings management for pydantic v2
+
+# -----------------------------------------------------------------------------
+# HTTP & API Clients
+# -----------------------------------------------------------------------------
+requests>=2.31.0,<3.0.0               # HTTP library for API calls
+yfinance>=0.2.30,<0.3.0               # Yahoo Finance API wrapper
+
+# -----------------------------------------------------------------------------
+# Configuration & Serialization
+# -----------------------------------------------------------------------------
+PyYAML>=6.0.0,<7.0.0                  # YAML parser for config files
+python-dotenv>=1.0.0,<2.0.0           # Load environment variables from .env
+
+# -----------------------------------------------------------------------------
+# Web Interface & Data Visualization
+# -----------------------------------------------------------------------------
+streamlit>=1.28.0,<2.0.0              # Streamlit web framework
+plotly>=5.0.0,<6.0.0                  # Interactive plotting library
+pandas>=2.0.0,<3.0.0                  # Data manipulation and analysis
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+pytest>=7.4.0,<9.0.0                  # Testing framework
+pytest-cov>=4.1.0,<5.0.0              # Coverage plugin for pytest
+pytest-mock>=3.12.0,<4.0.0            # Mocking plugin for pytest
+
+# -----------------------------------------------------------------------------
+# LLM Providers (Optional - Install based on your chosen provider)
+# -----------------------------------------------------------------------------
+google-generativeai>=0.3.0,<1.0.0   # Google Gemini API (recommended, free)
+openai>=1.0.0,<2.0.0                 # OpenAI GPT API
+anthropic>=0.7.0,<1.0.0              # Anthropic Claude API
+groq>=0.4.0,<1.0.0                   # Groq fast inference API
+
+# -----------------------------------------------------------------------------
+# Optional: Advanced Vector Stores (uncomment for production)
+# -----------------------------------------------------------------------------
+# chromadb>=0.4.0                     # Chroma vector database
+# faiss-cpu>=1.7.4                    # FAISS vector similarity search
+# sentence-transformers>=2.2.0        # Sentence embeddings
+
+# -----------------------------------------------------------------------------
+# Development Tools (optional)
+# -----------------------------------------------------------------------------
+# black>=23.0.0                       # Code formatter
+# flake8>=6.0.0                       # Linting
+# mypy>=1.0.0                         # Type checking
+# pre-commit>=3.0.0                   # Git hooks
 

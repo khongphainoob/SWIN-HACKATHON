@@ -2,8 +2,8 @@
 # Cấu hình cho LLM, Sentiment, Filtering, Recommendation, Memory
 
 LLM:
-  provider: "gemini"  # hoặc "openai"
-  model: "gemini-1.5-pro"
+  provider: "gemini"  # hoặc "openai", "anthropic", "groq"
+  model: "gemini-2.0-flash-001"  # gemini-2.0-flash-001, gemini-2.5-flash, gemini-2.5-pro, gpt-3.5-turbo, gpt-4, claude-3-sonnet-20240229
   temperature: 0.3
   max_tokens: 1024
 

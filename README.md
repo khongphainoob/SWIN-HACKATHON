@@ -34,6 +34,11 @@ Primary use case:
 ## Quickstart
 ### 1. Create environment
 ```bash
+# On Windows (PowerShell)
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# On macOS/Linux
 python3 -m venv .venv
 source .venv/bin/activate
 ```
@@ -41,22 +46,75 @@ source .venv/bin/activate
 ### 2. Install dependencies
 ```bash
 pip install -U pip
-pip install langchain-core pydantic requests yfinance pytest
+pip install -r requirements.txt
 ```
 
-### 3. Run tests
+**📦 Core Dependencies:**
+- `langchain-core` - LangChain abstractions
+- `langgraph` - Agentic workflow orchestration
+- `pydantic` - Data validation
+- `yfinance` - Market data
+- `pytest` - Testing framework
+- `python-dotenv` - Environment variable management
+
+See [INSTALL.md](INSTALL.md) for detailed installation guide.
+
+### 3. Configure API Keys (Required)
+
+**Quick Setup (< 2 min):**
+
+```powershell
+# 1. Create .env file
+copy .env.example .env
+
+# 2. Get free API key (choose one)
+# Option A: Gemini (recommended, free)
+#   → https://makersuite.google.com/app/apikey
+#   → Login → Create API Key → Copy to .env
+
+# Option B: Groq (fast, free)
+#   → https://console.groq.com/
+#   → Sign Up → API Keys → Create → Copy to .env
+
+# 3. Edit .env and paste your key
+# GEMINI_API_KEY=AIzaSy...
+# or
+# GROQ_API_KEY=gsk_...
+
+# 4. (Optional) Interactive setup
+python setup_api_keys.py
+```
+
+**Test API connection:**
+```powershell
+python test_streamlit_ready.py
+```
+
+Expected: `✅ GEMINI_API_KEY found` or `✅ GROQ_API_KEY found`
+
+📖 **Full guide:** [API_SETUP_GUIDE.md](API_SETUP_GUIDE.md) | **Quick ref:** [API_QUICKSTART.md](API_QUICKSTART.md)
+
+### 4. Run tests
 ```bash
-python3 -m pytest -q
+pytest tests/ -v
 ```
 
-### 4. Run end-to-end demo
+### 4. Run demos
 ```bash
-python3 scripts/test_news.py
+# Basic RAG sentiment demo
+python scripts/test_news.py
+
+# LangGraph agentic workflow demo
+python demo_langgraph_workflow.py
+
+# Full sentiment advisor demo
+python demo_sentiment_advisor.py
 ```
 
-The demo does:
+**Demo workflow:**
 - `SearchNewsTool.invoke({"query": "NVDA", "limit": 5})`
 - `NewsSentimentRAGService.predict_from_search_results(...)`
+- LangGraph multi-agent orchestration with conditional routing
 
 ## LangChain Usage Pattern
 Use `.invoke(...)` for tools and return JSON-serializable payloads.

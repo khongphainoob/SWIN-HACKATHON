@@ -1,1 +1,12 @@
 data/embeddings/
+.venv/
+__pycache__/
+
+# Ignore all .pyc files
+*.pyc
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Ignore logs and temporary files
+logs/
+temp/
+
